@@ -51,6 +51,13 @@ from langgraph.checkpoint.memory import MemorySaver
 
 memory = MemorySaver()
 
+import sqlite3
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+db_path = "memory.db"
+conn = sqlite3.connect(db_path, check_same_thread=False)
+sql_memory = SqliteSaver(conn)
+
 # Step 1: Define the State object
 class State(TypedDict):
     messages: Annotated[list, add_messages]
@@ -78,11 +85,11 @@ graph_builder.add_edge("tools", "chatbot")
 graph_builder.add_edge(START, "chatbot")
 
 # Step 5: Compile the Graph
-graph = graph_builder.compile(checkpointer=memory)
+graph = graph_builder.compile(checkpointer=sql_memory)
 # display(Image(graph.get_graph().draw_mermaid_png()))
 
 
-config = {"configurable": {"thread_id": "1"}}
+config = {"configurable": {"thread_id": "2"}}
 def chat(user_input: str, history):
     result = graph.invoke({"messages": [{"role": "user", "content": user_input}]}, config=config)
     return result["messages"][-1].content
